@@ -14,7 +14,7 @@ import {
 import { sha3, hexToNumber, bytesToHex, hexToBytes, keccak256 } from 'web3-utils';
 import ecc from 'eosjs-ecc'
 import { convertEOSPubKeyToEthAddress, getUnspentCell, changeOutputLock, mergeTypedArraysUnsafe, processEosHash } from './utils';
-import { CKB_NODE_URL, eosLockCell, blockAssemblerCode } from './config';
+import { CKB_NODE_URL, eosLockCell, blockAssemblerCode, secp256k1Dep } from './config';
 
 
 export default class Secp256EOS {
@@ -32,8 +32,6 @@ export default class Secp256EOS {
     const fromArgs = convertEOSPubKeyToEthAddress(fromPubKey);
     const toArgs = convertEOSPubKeyToEthAddress(toPubKey);
 
-    const { secp256k1Dep } = await this.ckb.loadDeps();
-  
     const inputLockHash = scriptToHash({
       codeHash: scriptToHash(eosLockCell.type),
       hashType: 'type',

@@ -13,7 +13,7 @@ import {
 } from '@nervosnetwork/ckb-sdk-utils';
 import { sha3, hexToNumber, bytesToHex, hexToBytes, keccak256 } from 'web3-utils';
 import { convertEOSPubKeyToEthAddress, getUnspentCell, changeOutputLock, mergeTypedArraysUnsafe, processEosHash, convertTronAddressToCKBAddress, convertTronAddressToArgs } from './utils';
-import { CKB_NODE_URL, eosLockCell, blockAssemblerCode, tronLockCell } from './config';
+import { CKB_NODE_URL, eosLockCell, blockAssemblerCode, tronLockCell, secp256k1Dep } from './config';
 
 
 export default class Secp256Tron {
@@ -31,7 +31,6 @@ export default class Secp256Tron {
     const fromArgs = convertTronAddressToArgs(this.tronWeb, fromTronAddress);
     const toArgs = convertTronAddressToArgs(this.tronWeb, toTronAddress);
 
-    const { secp256k1Dep } = await this.ckb.loadDeps();
   
     const inputLockHash = scriptToHash({
       codeHash: scriptToHash(tronLockCell.type),
