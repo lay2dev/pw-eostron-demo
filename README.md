@@ -1,10 +1,10 @@
-# scatter-demo-eosjs2
+# pw-demo-eostron
 
-scatter demo with eosjs2 
+pwlock demo for eos and tron wallet
 
 You can test it in TokenPocket Dapp Browser
 
-[Online demo](https://tp-lab.tokenpocket.pro/scatter-demo-eosjs2/index.html) 
+[Online demo]() 
 
 ## Project setup
 ```
