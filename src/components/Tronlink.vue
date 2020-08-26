@@ -53,8 +53,13 @@ export default {
     if(!window.tronWeb){
       alert('tronWeb load fail');
     }else{
-      this.currentAccount = window.tronWeb.defaultAddress.base58;
 
+      if(!window.tronWeb.defaultAddress || !window.tronWeb.defaultAddress.base58){
+        alert('load tron address fail');
+        return;
+      }
+
+      this.currentAccount = window.tronWeb.defaultAddress.base58;
       secp256Tron = new Secp256Tron(window.tronWeb);
 
       this.login();
