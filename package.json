@@ -1,0 +1,28 @@
+{
+    "name": "scatter-demo-eosjs2",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "serve": "vue-cli-service serve",
+        "build": "vue-cli-service build"
+    },
+    "dependencies": {
+        "@nervosnetwork/ckb-sdk-core": "^0.35.0",
+        "@nervosnetwork/ckb-sdk-utils": "^0.35.0",
+        "@scatterjs/core": "^2.7.44",
+        "@scatterjs/eosjs2": "^1.5.26",
+        "eosjs": "^20.0.0",
+        "eosjs-ecc": "^4.0.7",
+        "vconsole": "^3.3.0",
+        "vue": "^2.6.6",
+        "vue-router": "^3.0.1",
+        "web3-utils": "^1.2.11"
+    },
+    "devDependencies": {
+        "@vue/cli-plugin-babel": "^3.5.0",
+        "@vue/cli-service": "^3.5.0",
+        "less": "^3.0.4",
+        "less-loader": "^4.1.0",
+        "vue-template-compiler": "^2.5.21"
+    }
+}
