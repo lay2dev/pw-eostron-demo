@@ -96,7 +96,7 @@ export default class Secp256Tron {
     console.log('txhash', transactionHash);
     const emptyWitness = {
       ...(rawTx.witnesses[0]),
-      lock: `0x${'0'.repeat(130)}`,
+      lock: `0x${'0'.repeat(132)}`,
     };
 
     const serializedEmptyWitnessBytes = hexToBytes(serializeWitnessArgs(emptyWitness));
@@ -148,7 +148,7 @@ export default class Secp256Tron {
 
     const v = sig.slice(-2);
     const sigRS = sig.replace('0x', '').substr(0, 128);
-    const signatureHexString = '0x' + sigRS + (v === '1c' ? '01' : '00');
+    const signatureHexString = '0x03' + sigRS + (v === '1c' ? '01' : '00');
 
 
     console.log('signatureHexString', signatureHexString);

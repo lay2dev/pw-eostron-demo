@@ -96,7 +96,7 @@ export default class Secp256EOS {
     console.log('txhash', transactionHash);
     const emptyWitness = {
       ...(rawTx.witnesses[0]),
-      lock: `0x${'0'.repeat(130)}`,
+      lock: `0x${'0'.repeat(132)}`,
     };
 
     const serializedEmptyWitnessBytes = hexToBytes(serializeWitnessArgs(emptyWitness));
@@ -140,7 +140,7 @@ export default class Secp256EOS {
     sigObj.r.toBuffer(32).copy(buf, 0);
     sigObj.s.toBuffer(32).copy(buf, 32);
     buf.writeUInt8(sigObj.i, 64);
-    const signatureHexString = '0x' + buf.toString('hex');
+    const signatureHexString = '0x02' + buf.toString('hex');
 
     console.log('signatureHexString', signatureHexString);
 
