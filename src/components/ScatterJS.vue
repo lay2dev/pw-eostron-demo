@@ -1,10 +1,10 @@
 <template>
   <div class="hello">
-    <h1>CKB with EOSWallet </h1>
+    <h1>CKB with EOSWallet</h1>
 
     <!-- <button @click="connect">connect</button> -->
 
-    <button @click="login">login</button>
+    <!-- <button @click="login">login</button> -->
 
     <!-- <button @click="logout">logout</button> -->
 
@@ -36,153 +36,90 @@
     <p style="word-break:break-all;">CKB Address: {{ toCKBAddress }}</p>
     <p>Balance: {{ toCKBBalance }} CKB</p>
 
-     <br/>
-    <br/>
+    <br />
+    <br />
   </div>
 </template>
 
 <script>
-import ScatterJS from '@scatterjs/core'
-import ScatterEOS from '@scatterjs/eosjs2'
-import { JsonRpc, Api } from 'eosjs'
-import ecc from 'eosjs-ecc'
-import { convertEOSPubKeyToCKBAddress, getBalance, addressToLockScript } from '../chain/utils'
-import { scriptToHash } from '@nervosnetwork/ckb-sdk-utils'
-import Secp256Eos from '../chain/ckb-eos'
+import PWCore, {
+  PwCollector,
+  ChainID,
+  Address,
+  Amount,
+  AddressType,
+  EosSigner,
+  EosProvider,
+  getCKBLockArgsForEosAccount,
+} from '@lay2/pw-core'
 
 import VConsole from 'vconsole'
 var vConsole = new VConsole()
 
-const network = ScatterJS.Network.fromJson({
-  blockchain: 'eos',
-  chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
-  host: 'nodes.get-scatter.com',
-  port: 443,
-  protocol: 'https',
-})
+let pwcore
 
-const rpc = new JsonRpc(network.fullhost())
-
-const requiredFields = { accounts: [network] }
-
-let scatter = ''
-let api = ''
-
-let secp256Eos = ''
-
-ScatterJS.plugins(new ScatterEOS())
+let toAddress
 
 export default {
   name: 'HelloWorld',
   data() {
     return {
       currentAccount: '',
-      currentPermission: '',
-      currentPublicKey: '',
       currentCKBAddress: '',
       currentCKBBalance: '0',
       toAccount: 'sking1234512',
-      toAccountPublicKey: '',
       toCKBAddress: '',
       toCKBBalance: '0',
     }
   },
-  created() {
-    ScatterJS.scatter.connect('scatter-demo', { network }).then((connected) => {
-      if (!connected) {
-        alert('no connect')
-        return false
-      }
-
-      console.log('connected')
-      scatter = ScatterJS.scatter
-      console.log('scatter', scatter)
-      secp256Eos = new Secp256Eos(scatter)
-    })
+  async created() {
+    this.login()
   },
 
   methods: {
     connect: function() {
-      ScatterJS.scatter.connect('scatter-demo').then((connected) => {
-        if (!connected) {
-          alert('no connect')
-          return false
-        }
-
-        // alert('connected')
-        // scatter = ScatterJS.scatter;
-      })
-    },
-    logout: function() {
-      if (!this.currentAccount) {
-        alert('login first')
-        return
-      }
-      scatter.logout().then((a) => alert(a))
+      // alert('connected')
+      // scatter = ScatterJS.scatter;
     },
     login: async function() {
       try {
-        const id = await scatter.login()
-        const account = scatter.identity.accounts.find((x) => x.blockchain === 'eos')
+        pwcore = await new PWCore('https://aggron.ckb.dev').init(
+          new EosProvider(),
+          new PwCollector('https://cellapitest.ckb.pw')
+        )
+        this.currentAccount = PWCore.provider.address.addressString
+        this.currentCKBAddress = PWCore.provider.address.toCKBAddress()
 
-        this.currentAccount = account.name
-        this.currentPermission = account.authority
-        this.currentPublicKey = account.publicKey
-        this.currentCKBAddress = convertEOSPubKeyToCKBAddress(this.currentPublicKey)
+        const toAddressLockArgs = await getCKBLockArgsForEosAccount(this.toAccount)
+        toAddress = new Address(this.toAccount, AddressType.eos, toAddressLockArgs)
+        this.toCKBAddress = toAddress.toCKBAddress()
 
-        // alert('get account:' + JSON.stringify(account))
-        console.log('get account:' + JSON.stringify(account))
-
-        api = scatter.eos(network, Api, { rpc })
-
-        const data = await rpc.get_account(this.toAccount)
-        const pubkey = data.permissions[0].required_auth.keys[0].key
-        console.log('account2 pubKey', pubkey)
-        this.toAccountPublicKey = pubkey
-        this.toCKBAddress = convertEOSPubKeyToCKBAddress(pubkey)
-
-        await this.getBalance();
+        await this.getBalance()
 
         const timeOutFunc = () => {
-          this.getBalance();
+          this.getBalance()
           setTimeout(timeOutFunc, 2000)
         }
-        timeOutFunc();
-
+        timeOutFunc()
       } catch (error) {
         alert('get identity error')
         console.error(error)
       }
     },
-    getBalance: async function(){
-        this.currentCKBBalance = await getBalance(scriptToHash(addressToLockScript(this.currentCKBAddress)))
-        this.toCKBBalance = await getBalance(scriptToHash(addressToLockScript(this.toCKBAddress)))
+    getBalance: async function() {
+      this.currentCKBBalance = await PWCore.defaultCollector.getBalance(PWCore.provider.address)
+      this.toCKBBalance = await PWCore.defaultCollector.getBalance(toAddress)
     },
 
     getArbitrarySignature: async function() {
-      try{
-        const txhash = await secp256Eos.sendCKB(this.currentPublicKey, this.toAccountPublicKey, 100)
-        alert('send Success, txHash=' + txhash);
-        console.log('send Success, txHash=' + txhash);
-
-      }catch(err){
-        alert('send err' + err);
-        console.log(err);
+      try {
+        const txhash = await pwcore.send(toAddress, new Amount('100'))
+        alert('send Success, txHash=' + txhash)
+        console.log('send Success, txHash=' + txhash)
+      } catch (err) {
+        alert('send err' + err)
+        console.log(err)
       }
-
-      // const dataToSign = 'dataToSign';
-      // scatter.getArbitrarySignature(this.currentPublicKey, dataToSign).then(signature=> {
-      //   alert(signature);
-      //   const verifyRet = ecc.verify(signature, dataToSign, this.currentPublicKey);
-      //   console.log('verifyRet', verifyRet);
-      //   const recovered = ecc.recover(signature, dataToSign);
-      //   console.log('recovered', recovered);
-      //   console.log('pubKey', this.currentPublicKey);
-
-      // }).catch(err =>{
-      //   console.log('err', err);
-      //   alert('error:' + err);
-      // });
     },
   },
 }

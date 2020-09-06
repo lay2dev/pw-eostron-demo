@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>CKB with TronWallet </h1>
+    <h1>CKB with TronWallet</h1>
 
     <p>Tron address: {{ currentAccount }}</p>
     <p style="word-break:break-all;">CKB Address: {{ currentCKBAddress }}</p>
@@ -14,27 +14,19 @@
     <p>To: {{ toAccount }}</p>
     <p style="word-break:break-all;">CKB Address: {{ toCKBAddress }}</p>
     <p>Balance: {{ toCKBBalance }} CKB</p>
-    <br/>
-    <br/>
+    <br />
+    <br />
   </div>
 </template>
 
 <script>
-import ScatterJS from '@scatterjs/core'
-import ScatterEOS from '@scatterjs/eosjs2'
-import { JsonRpc, Api } from 'eosjs'
-import ecc from 'eosjs-ecc'
-import { convertEOSPubKeyToCKBAddress, getBalance, addressToLockScript, convertTronAddressToCKBAddress } from '../chain/utils'
-import { scriptToHash } from '@nervosnetwork/ckb-sdk-utils'
-import Secp256Tron from '../chain/ckb-tron'
-
 import VConsole from 'vconsole'
+import PWCore, { Address, AddressType, PwCollector, TronProvider, Amount } from '@lay2/pw-core'
 var vConsole = new VConsole()
 
-let scatter = ''
-let api = ''
+let pwcore
 
-let secp256Tron = ''
+let toAddress
 
 export default {
   name: 'HelloWorld',
@@ -49,60 +41,49 @@ export default {
     }
   },
   created() {
-
-    if(!window.tronWeb){
-      alert('tronWeb load fail');
-    }else{
-
-      if(!window.tronWeb.defaultAddress || !window.tronWeb.defaultAddress.base58){
-        alert('load tron address fail');
-        return;
-      }
-
-      this.currentAccount = window.tronWeb.defaultAddress.base58;
-      secp256Tron = new Secp256Tron(window.tronWeb);
-
-      this.login();
-    }
+    this.login()
   },
 
   methods: {
     login: async function() {
       try {
+        pwcore = await new PWCore('https://aggron.ckb.dev').init(
+          new TronProvider(),
+          new PwCollector('https://cellapitest.ckb.pw')
+        )
 
-        this.currentCKBAddress = convertTronAddressToCKBAddress(window.tronWeb, this.currentAccount);
-        this.toCKBAddress = convertTronAddressToCKBAddress(window.tronWeb, this.toAccount)
-        await this.getBalance();
+        this.currentAccount = PWCore.provider.address.addressString
+        this.currentCKBAddress = PWCore.provider.address.toCKBAddress()
+
+        toAddress = new Address(this.toAccount, AddressType.tron)
+        this.toCKBAddress = toAddress.toCKBAddress()
+
+        await this.getBalance()
 
         const timeOutFunc = () => {
-          this.getBalance();
+          this.getBalance()
           setTimeout(timeOutFunc, 2000)
         }
-        timeOutFunc();
-
+        timeOutFunc()
       } catch (error) {
         alert('get identity error')
         console.error(error)
       }
     },
-    getBalance: async function(){
-        this.currentAccount = window.tronWeb.defaultAddress.base58;
-        this.currentCKBAddress = convertTronAddressToCKBAddress(window.tronWeb, this.currentAccount);
-
-        this.currentCKBBalance = await getBalance(scriptToHash(addressToLockScript(this.currentCKBAddress)))
-        this.toCKBBalance = await getBalance(scriptToHash(addressToLockScript(this.toCKBAddress)))
+    getBalance: async function() {
+      this.currentCKBBalance = await PWCore.defaultCollector.getBalance(PWCore.provider.address)
+      this.toCKBBalance = await PWCore.defaultCollector.getBalance(toAddress)
     },
 
     getArbitrarySignature: async function() {
-      try{
-        const txhash = await secp256Tron.sendCKB(this.currentAccount, this.toAccount, 100)
-        alert('send Success, txHash=' + txhash);
-
-      }catch(err){
-        alert('send err' + err);
-        console.log(err);
+      try {
+        // const txhash = await secp256Tron.sendCKB(this.currentAccount, this.toAccount, 100)
+        const txhash = await pwcore.send(toAddress, new Amount('100'))
+        alert('send Success, txHash=' + txhash)
+      } catch (err) {
+        alert('send err' + err)
+        console.log(err)
       }
-
     },
   },
 }
