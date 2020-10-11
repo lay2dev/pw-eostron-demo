@@ -82,16 +82,31 @@ export default {
       // scatter = ScatterJS.scatter;
     },
     login: async function() {
+      const network = {
+        blockchain: 'eos',
+        chainId:
+          'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+        host: 'eospush.tokenpocket.pro',
+        port: 80,
+        protocol: 'http',
+      }
       try {
+        const eosProvider = new EosProvider(network)
         pwcore = await new PWCore('https://aggron.ckb.dev').init(
-          new EosProvider(),
+          eosProvider,
           new PwCollector('https://cellapitest.ckb.pw')
         )
         this.currentAccount = PWCore.provider.address.addressString
         this.currentCKBAddress = PWCore.provider.address.toCKBAddress()
 
-        const toAddressLockArgs = await getCKBLockArgsForEosAccount(this.toAccount)
-        toAddress = new Address(this.toAccount, AddressType.eos, toAddressLockArgs)
+        const toAddressLockArgs = await eosProvider.getCKBLockArgsForEosAccount(
+          this.toAccount
+        )
+        toAddress = new Address(
+          this.toAccount,
+          AddressType.eos,
+          toAddressLockArgs
+        )
         this.toCKBAddress = toAddress.toCKBAddress()
 
         await this.getBalance()
@@ -107,7 +122,9 @@ export default {
       }
     },
     getBalance: async function() {
-      this.currentCKBBalance = await PWCore.defaultCollector.getBalance(PWCore.provider.address)
+      this.currentCKBBalance = await PWCore.defaultCollector.getBalance(
+        PWCore.provider.address
+      )
       this.toCKBBalance = await PWCore.defaultCollector.getBalance(toAddress)
     },
 
