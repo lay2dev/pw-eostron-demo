@@ -87,8 +87,8 @@ export default {
         chainId:
           'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
         host: 'eospush.tokenpocket.pro',
-        port: 80,
-        protocol: 'http',
+        port: 443,
+        protocol: 'https',
       }
       try {
         const eosProvider = new EosProvider(network)
